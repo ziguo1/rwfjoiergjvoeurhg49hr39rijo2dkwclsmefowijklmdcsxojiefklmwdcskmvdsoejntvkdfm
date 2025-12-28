@@ -218,6 +218,24 @@
             line-height: 1.5;
         }
         
+        .download-disclaimer {
+            max-width: 800px;
+            margin: 0 auto 40px;
+            padding: 16px 20px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-left: 4px solid rgba(59, 130, 246, 0.6);
+            border-radius: 8px;
+            color: #93c5fd;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .download-disclaimer strong {
+            color: #bfdbfe;
+            font-weight: 600;
+        }
+        
         @media (max-width: 768px) {
             body {
                 padding: 20px 16px;
@@ -255,6 +273,10 @@
             <h1>Web Port Compilation</h1>
             <p class="subtitle">A list of desktop games (mostly indie) that have been ported to the browser.<br>(most from gn-games)</p>
         </header>
+        
+        <div class="download-disclaimer">
+            <strong>⚠️ Download Notice:</strong> Many of these games are very large in file size and may take several minutes or more to download depending on your internet connection speed. Please be patient while games load.
+        </div>
         
         <div class="search-section">
             <input type="text" id="searchInput" placeholder="Search games...">
@@ -311,12 +333,12 @@
                     <p class="mature-warning">⚠️ Intense themes of mortality and self-harm</p>
                 </div>
             </a>
-            <!-- <a href="celeste/index.html" class="game-card" data-name="celeste">
+            <a href="celeste/index.html" class="game-card" data-name="celeste">
                 <div class="game-content">
                     <h2>Celeste</h2>
                     <p class="game-description">A challenging platformer about climbing a mountain while overcoming personal struggles.</p>
                 </div>
-            </a> -->
+            </a>
             <a href="class-of-09/index.html" class="game-card" data-name="class of 09" data-18plus="true">
                 <div class="game-content">
                     <h2>Class of '09<span class="mature-badge">MATURE</span></h2>
