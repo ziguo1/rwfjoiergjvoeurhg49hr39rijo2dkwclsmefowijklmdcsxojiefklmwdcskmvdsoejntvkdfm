@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Port Compilation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.6;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+        }
+        
+        .subtitle {
+            font-size: 0.95rem;
+            color: #888;
+            font-weight: 400;
+        }
+        
+        .search-section {
+            max-width: 800px;
+            margin: 0 auto 50px;
+        }
+        
+        #searchInput {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 0.95rem;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+        
+        #searchInput:focus {
+            outline: none;
+            border-color: #4a4a4a;
+            background: #222;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+        }
+        
+        #searchInput::placeholder {
+            color: #666;
+        }
+        
+        .games-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .game-card {
+            background: #1a1a1a;
+            padding: 16px 20px;
+            text-decoration: none;
+            color: #e0e0e0;
+            border-bottom: 1px solid #2a2a2a;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .game-card:first-child {
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        
+        .game-card:last-child {
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            border-bottom: none;
+        }
+        
+        .game-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .game-card:hover {
+            background: #222;
+            padding-left: 24px;
+        }
+        
+        .game-card:hover::before {
+            transform: scaleY(1);
+        }
+        
+        .game-card.hidden {
+            display: none;
+        }
+        
+        .game-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .game-card h2 {
+            font-size: 1rem;
+            font-weight: 500;
+            margin: 0 0 6px 0;
+            transition: color 0.3s ease;
+        }
+        
+        .game-card:hover h2 {
+            color: #ffffff;
+        }
+        
+        .game-description {
+            font-size: 0.875rem;
+            color: #888;
+            margin: 0;
+            line-height: 1.4;
+            transition: color 0.3s ease;
+        }
+        
+        .game-card:hover .game-description {
+            color: #aaa;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+        
+        .no-results.hidden {
+            display: none;
+        }
+        
+        .footer {
+            margin-top: 80px;
+            padding-top: 40px;
+            text-align: center;
+            border-top: 1px solid #2a2a2a;
+            color: #888;
+            font-size: 0.875rem;
+        }
+        
+        .footer a {
+            color: #e0e0e0;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+        
+        .stats {
+            margin-top: 20px;
+            font-size: 0.875rem;
+            color: #888;
+            text-align: center;
+        }
+        
+        .mature-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.2), rgba(185, 28, 28, 0.15));
+            color: #fca5a5;
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-left: 10px;
+            border: 1px solid rgba(220, 38, 38, 0.4);
+            letter-spacing: 0.05em;
+            box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1);
+        }
+        
+        .mature-warning {
+            font-size: 0.8rem;
+            color: #fca5a5;
+            margin-top: 6px;
+            padding: 6px 12px;
+            background: rgba(220, 38, 38, 0.08);
+            border-left: 3px solid rgba(220, 38, 38, 0.4);
+            border-radius: 4px;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 16px;
+            }
+            
+            header {
+                margin-bottom: 40px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .games-grid {
+                max-width: 100%;
+            }
+            
+            .game-card {
+                padding: 12px 16px;
+            }
+            
+            .game-card h2 {
+                font-size: 0.9rem;
+            }
+            
+            .game-description {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Web Port Compilation</h1>
+            <p class="subtitle">A list of desktop games (mostly indie) that have been ported to the browser.<br>(most from gn-games)</p>
+        </header>
+        
+        <div class="search-section">
+            <input type="text" id="searchInput" placeholder="Search games...">
+        </div>
+        
+        <div class="games-grid" id="gamesGrid">
+            <a href="amanda-the-adventurer/index.html" class="game-card" data-name="amanda the adventurer" data-18plus="true">
+                <div class="game-content">
+                    <h2>Amanda the Adventurer</h2>
+                    <p class="game-description">A horror adventure game where you explore a mysterious house and solve puzzles while avoiding danger.</p>
+                </div>
+            </a>
+            <a href="andys-apple-farm/index.html" class="game-card" data-name="andy's apple farm" data-18plus="true">
+                <div class="game-content">
+                    <h2>Andy's Apple Farm</h2>
+                    <p class="game-description">A horror game set in an apple farm where you must survive the night and uncover dark secrets.</p>
+                </div>
+            </a>
+            <a href="baldi-plus/index.html" class="game-card" data-name="baldi plus">
+                <div class="game-content">
+                    <h2>Baldi Plus</h2>
+                    <p class="game-description">An enhanced version of the educational horror game where you solve math problems to escape.</p>
+                </div>
+            </a>
+            <a href="baldi-remaster/index.html" class="game-card" data-name="baldi remaster">
+                <div class="game-content">
+                    <h2>Baldi Remaster</h2>
+                    <p class="game-description">A remastered version of Baldi's Basics with improved graphics and gameplay.</p>
+                </div>
+            </a>
+            <a href="bendy/index.html" class="game-card" data-name="bendy" data-18plus="true">
+                <div class="game-content">
+                    <h2>Bendy</h2>
+                    <p class="game-description">A first-person horror puzzle game set in an abandoned animation studio.</p>
+                </div>
+            </a>
+            <a href="bergentruck/index.html" class="game-card" data-name="bergentruck" data-18plus="true">
+                <div class="game-content">
+                    <h2>Bergentruck</h2>
+                    <p class="game-description">A horror game inspired by Undertale where you navigate through a mysterious underground world.</p>
+                </div>
+            </a>
+            <a href="bloodmoney/index.html" class="game-card" data-name="bloodmoney" data-18plus="true">
+                <div class="game-content">
+                    <h2>Bloodmoney<span class="mature-badge">MATURE</span></h2>
+                    <p class="game-description">An RPG Maker horror game featuring dark themes and psychological horror elements.</p>
+                    <p class="mature-warning">⚠️ Mature themes, psychological horror, and disturbing content</p>
+                </div>
+            </a>
+            <a href="buckshot-roulette/index.html" class="game-card" data-name="buckshot roulette" data-18plus="true">
+                <div class="game-content">
+                    <h2>Buckshot Roulette<span class="mature-badge">MATURE</span></h2>
+                    <p class="game-description">A tense tabletop horror game where you play Russian roulette with a 12-gauge shotgun.</p>
+                    <p class="mature-warning">⚠️ Intense themes of mortality and self-harm</p>
+                </div>
+            </a>
+            <!-- <a href="celeste/index.html" class="game-card" data-name="celeste">
+                <div class="game-content">
+                    <h2>Celeste</h2>
+                    <p class="game-description">A challenging platformer about climbing a mountain while overcoming personal struggles.</p>
+                </div>
+            </a> -->
+            <a href="class-of-09/index.html" class="game-card" data-name="class of 09" data-18plus="true">
+                <div class="game-content">
+                    <h2>Class of '09<span class="mature-badge">MATURE</span></h2>
+                    <p class="game-description">A dark comedy visual novel set in a high school in 2009 with multiple storylines.</p>
+                    <p class="mature-warning">⚠️ Strong language, mature humor, and sensitive social themes</p>
+                </div>
+            </a>
+            <a href="cuphead/index.html" class="game-card" data-name="cuphead">
+                <div class="game-content">
+                    <h2>Cuphead</h2>
+                    <p class="game-description">A run-and-gun action game with 1930s cartoon aesthetics and challenging boss battles.</p>
+                </div>
+            </a>
+            <a href="ddlc/index.html" class="game-card" data-name="ddlc doki doki literature club" data-18plus="true">
+                <div class="game-content">
+                    <h2>Doki Doki Literature Club<span class="mature-badge">MATURE</span></h2>
+                    <p class="game-description">A psychological horror visual novel that subverts expectations of dating sims.</p>
+                    <p class="mature-warning">⚠️ Depression, suicide, and intense psychological themes — not suitable for children or those easily disturbed</p>
+                </div>
+            </a>
+            <a href="dead-plate/index.html" class="game-card" data-name="dead plate" data-18plus="true">
+                <div class="game-content">
+                    <h2>Dead Plate<span class="mature-badge">MATURE</span></h2>
+                    <p class="game-description">A horror RPG Maker game where you work at a restaurant with a dark secret.</p>
+                    <p class="mature-warning">⚠️ Dark psychological themes and disturbing narrative content</p>
+                </div>
+            </a>
+            <a href="deadseat/index.html" class="game-card" data-name="deadseat" data-18plus="true">
+                <div class="game-content">
+                    <h2>Deadseat</h2>
+                    <p class="game-description">A horror game where you must survive in a dangerous environment.</p>
+                </div>
+            </a>
+            <a href="deltarune/index.html" class="game-card" data-name="deltarune">
+                <div class="game-content">
+                    <h2>Deltarune</h2>
+                    <p class="game-description">An RPG adventure game by the creator of Undertale, featuring an alternate universe.</p>
+                </div>
+            </a>
+            <a href="deltatraveler/index.html" class="game-card" data-name="deltatraveler">
+                <div class="game-content">
+                    <h2>Delta Traveler</h2>
+                    <p class="game-description">A fan-made Undertale/Deltarune crossover game with new adventures and characters.</p>
+                </div>
+            </a>
+            <a href="donottakethiscathome/index.html" class="game-card" data-name="do not take this cat home" data-18plus="true">
+                <div class="game-content">
+                    <h2>Do Not Take This Cat Home</h2>
+                    <p class="game-description">A horror visual novel about a cat that brings misfortune to those who take it home.</p>
+                </div>
+            </a>
+            <a href="fears-to-fathom/home-alone/index.html" class="game-card" data-name="fears to fathom home alone" data-18plus="true">
+                <div class="game-content">
+                    <h2>Fears to Fathom: Home Alone</h2>
+                    <p class="game-description">A psychological horror game based on real-life horror stories where you're home alone.</p>
+                </div>
+            </a>
+            <a href="fnaf/index.html" class="game-card" data-name="five nights at freddy's fnaf" data-18plus="true">
+                <div class="game-content">
+                    <h2>Five Nights at Freddy's</h2>
+                    <p class="game-description">Survive five nights as a security guard in a haunted pizzeria with animatronic characters.</p>
+                </div>
+            </a>
+            <a href="getting-over-it/index.html" class="game-card" data-name="getting over it">
+                <div class="game-content">
+                    <h2>Getting Over It</h2>
+                    <p class="game-description">A frustratingly difficult climbing game where you use a hammer to scale a mountain.</p>
+                </div>
+            </a>
+            <a href="happy-sheepies/index.html" class="game-card" data-name="happy sheepies">
+                <div class="game-content">
+                    <h2>Happy Sheepies</h2>
+                    <p class="game-description">A cute and relaxing game featuring adorable sheep characters.</p>
+                </div>
+            </a>
+            <a href="hotline-miami/index.html" class="game-card" data-name="hotline miami" data-18plus="true">
+                <div class="game-content">
+                    <h2>Hotline Miami</h2>
+                    <p class="game-description">A top-down action game with fast-paced combat and a retro synthwave aesthetic.</p>
+                </div>
+            </a>
+            <a href="human-expenditure-program/index.html" class="game-card" data-name="human expenditure program" data-18plus="true">
+                <div class="game-content">
+                    <h2>Human Expenditure Program<span class="mature-badge">MATURE</span></h2>
+                    <p class="game-description">An RPG Maker horror game with dark themes and psychological elements.</p>
+                    <p class="mature-warning">⚠️ Disturbing psychological themes and mature content</p>
+                </div>
+            </a>
+            <a href="jelly-drift/index.html" class="game-card" data-name="jelly drift">
+                <div class="game-content">
+                    <h2>Jelly Drift</h2>
+                    <p class="game-description">A physics-based racing game with jelly-like vehicles and colorful tracks.</p>
+                </div>
+            </a>
+            <a href="karlson/index.html" class="game-card" data-name="karlson">
+                <div class="game-content">
+                    <h2>Karlson</h2>
+                    <p class="game-description">A fast-paced 3D platformer with parkour mechanics and milk-collecting action.</p>
+                </div>
+            </a>
+            <a href="kindergarten/index.html" class="game-card" data-name="kindergarten" data-18plus="true">
+                <div class="game-content">
+                    <h2>Kindergarten</h2>
+                    <p class="game-description">A dark comedy adventure game set in a kindergarten with mysterious events.</p>
+                </div>
+            </a>
+            <a href="lacysflashgames/index.html" class="game-card" data-name="lacys flash games">
+                <div class="game-content">
+                    <h2>Lacy's Flash Games</h2>
+                    <p class="game-description">A collection of classic Flash games featuring various gameplay styles.</p>
+                </div>
+            </a>
+            <a href="milkman-karlson/index.html" class="game-card" data-name="milkman karlson">
+                <div class="game-content">
+                    <h2>Milkman Karlson</h2>
+                    <p class="game-description">A prequel to Karlson featuring milk delivery action and platforming challenges.</p>
+                </div>
+            </a>
+            <a href="minesweeperplus/index.html" class="game-card" data-name="minesweeper plus">
+                <div class="game-content">
+                    <h2>Minesweeper Plus</h2>
+                    <p class="game-description">An enhanced version of the classic Minesweeper puzzle game with new features.</p>
+                </div>
+            </a>
+            <a href="omori-fixed/index.html" class="game-card" data-name="omori" data-18plus="true">
+                <div class="game-content">
+                    <h2>Omori<span class="mature-badge">MATURE</span></h2>
+                    <p class="game-description">A psychological horror RPG about a boy named Sunny and his journey through dreams and reality.</p>
+                    <p class="mature-warning">⚠️ Depression, anxiety, suicide, and trauma — heavy emotional and psychological themes throughout</p>
+                </div>
+            </a>
+            <a href="people-playground/index.html" class="game-card" data-name="people playground" data-18plus="true">
+                <div class="game-content">
+                    <h2>People Playground</h2>
+                    <p class="game-description">A physics sandbox game where you can experiment with ragdolls and various objects.</p>
+                </div>
+            </a>
+            <a href="pizza-tower/index.html" class="game-card" data-name="pizza tower">
+                <div class="game-content">
+                    <h2>Pizza Tower</h2>
+                    <p class="game-description">A fast-paced 2D platformer with hand-drawn animation and wacky humor.</p>
+                </div>
+            </a>
+            <a href="raft/index.html" class="game-card" data-name="raft">
+                <div class="game-content">
+                    <h2>Raft</h2>
+                    <p class="game-description">A survival game where you build and expand your raft while exploring the ocean.</p>
+                </div>
+            </a>
+            <a href="repo/index.html" class="game-card" data-name="repo">
+                <div class="game-content">
+                    <h2>Repo</h2>
+                    <p class="game-description">A game featuring repository-style gameplay and exploration.</p>
+                </div>
+            </a>
+            <a href="schoolboy-runaway/index.html" class="game-card" data-name="schoolboy runaway">
+                <div class="game-content">
+                    <h2>Schoolboy Runaway</h2>
+                    <p class="game-description">An adventure game about a schoolboy trying to escape from various situations.</p>
+                </div>
+            </a>
+            <a href="slender/index.html" class="game-card" data-name="slender" data-18plus="true">
+                <div class="game-content">
+                    <h2>Slender</h2>
+                    <p class="game-description">A horror game where you collect pages while being stalked by the Slender Man.</p>
+                </div>
+            </a>
+            <a href="sonic.exe/index.html" class="game-card" data-name="sonic exe" data-18plus="true">
+                <div class="game-content">
+                    <h2>Sonic.exe</h2>
+                    <p class="game-description">A horror fan game featuring a corrupted version of Sonic the Hedgehog.</p>
+                </div>
+            </a>
+            <a href="speed-stars/index.html" class="game-card" data-name="speed stars">
+                <div class="game-content">
+                    <h2>Speed Stars</h2>
+                    <p class="game-description">A fast-paced racing game with colorful graphics and challenging tracks.</p>
+                </div>
+            </a>
+            <a href="tattletail/index.html" class="game-card" data-name="tattletail" data-18plus="true">
+                <div class="game-content">
+                    <h2>Tattletail</h2>
+                    <p class="game-description">A horror game where you care for a virtual pet while avoiding a dangerous creature.</p>
+                </div>
+            </a>
+            <a href="thats-not-my-neighbor/index.html" class="game-card" data-name="that's not my neighbor" data-18plus="true">
+                <div class="game-content">
+                    <h2>That's Not My Neighbor</h2>
+                    <p class="game-description">A horror game where you must identify imposters trying to enter your building.</p>
+                </div>
+            </a>
+            <a href="the-man-in-the-window/index.html" class="game-card" data-name="the man in the window" data-18plus="true">
+                <div class="game-content">
+                    <h2>The Man in the Window</h2>
+                    <p class="game-description">A horror game about a mysterious figure appearing in windows.</p>
+                </div>
+            </a>
+            <a href="ultrakill/index.html" class="game-card" data-name="ultrakill" data-18plus="true">
+                <div class="game-content">
+                    <h2>Ultrakill</h2>
+                    <p class="game-description">A fast-paced retro-style FPS with intense combat and stylish movement mechanics.</p>
+                </div>
+            </a>
+            <a href="undertale/index.html" class="game-card" data-name="undertale">
+                <div class="game-content">
+                    <h2>Undertale</h2>
+                    <p class="game-description">A unique RPG where you can choose to spare or fight monsters, affecting the story.</p>
+                </div>
+            </a>
+            <a href="undertale-yellow/index.html" class="game-card" data-name="undertale yellow">
+                <div class="game-content">
+                    <h2>Undertale Yellow</h2>
+                    <p class="game-description">A fan-made Undertale prequel featuring new characters and an original story.</p>
+                </div>
+            </a>
+            <a href="web-fishing/index.html" class="game-card" data-name="web fishing">
+                <div class="game-content">
+                    <h2>Web Fishing</h2>
+                    <p class="game-description">A relaxing fishing game playable in your web browser.</p>
+                </div>
+            </a>
+            <a href="yandere-simulator/index.html" class="game-card" data-name="yandere simulator" data-18plus="true">
+                <div class="game-content">
+                    <h2>Yandere Simulator</h2>
+                    <p class="game-description">A stealth action game where you play as a yandere student eliminating rivals.</p>
+                </div>
+            </a>
+            <a href="yume-nikki/index.html" class="game-card" data-name="yume nikki">
+                <div class="game-content">
+                    <h2>Yume Nikki</h2>
+                    <p class="game-description">A surreal exploration game where you collect effects in a dream world.</p>
+                </div>
+            </a>
+        </div>
+        
+        <div class="no-results hidden" id="noResults">
+            <p>No games found</p>
+        </div>
+        
+        <div class="stats" id="stats">
+            <p>Showing <span id="showingGames">0</span> of <span id="totalGames">0</span> games</p>
+        </div>
+        
+        <div class="footer">
+            <p>Games collection curated by <a href="https://gn-games.github.io" target="_blank">gn-games</a></p>
+        </div>
+    </div>
+    
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const gameCards = document.querySelectorAll('.game-card');
+        const totalGamesSpan = document.getElementById('totalGames');
+        const showingGamesSpan = document.getElementById('showingGames');
+        const gamesGrid = document.getElementById('gamesGrid');
+        const noResults = document.getElementById('noResults');
+        
+        // Check for hide_gore parameter in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const hideGore = urlParams.get('hide_gore') === '1';
+        
+        // Filter out 18+ games if hide_gore is enabled
+        let visibleCards = Array.from(gameCards);
+        if (hideGore) {
+            gameCards.forEach(card => {
+                if (card.getAttribute('data-18plus') === 'true') {
+                    card.style.display = 'none';
+                    visibleCards = visibleCards.filter(c => c !== card);
+                }
+            });
+        }
+        
+        const totalGames = visibleCards.length;
+        totalGamesSpan.textContent = totalGames;
+        showingGamesSpan.textContent = totalGames;
+        
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            let visibleCount = 0;
+            
+            visibleCards.forEach(card => {
+                const gameName = card.getAttribute('data-name').toLowerCase();
+                const description = card.querySelector('.game-description')?.textContent.toLowerCase() || '';
+                const searchableText = gameName + ' ' + description;
+                
+                if (searchableText.includes(searchTerm)) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+            
+            showingGamesSpan.textContent = visibleCount;
+            
+            if (visibleCount === 0 && searchTerm !== '') {
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
